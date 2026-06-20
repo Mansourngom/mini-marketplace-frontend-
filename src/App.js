@@ -10,7 +10,7 @@ import Messages from './pages/Messages';
 import ModifierAnnonce from './pages/ModifierAnnonce';
 
 function Navbar() {
-  
+  const [menuOpen, setMenuOpen] = useState(false);
   const token = localStorage.getItem('access_token');
   const role = localStorage.getItem('user_role');
   const username = localStorage.getItem('username');
@@ -23,42 +23,172 @@ function Navbar() {
     window.location.href = '/';
   };
 
+  const navStyle = `
+    .nav-link {
+      color: white;
+      text-decoration: none;
+      font-size: 15px;
+      font-weight: 600;
+      padding: 8px 14px;
+      border-radius: 8px;
+      transition: all 0.2s ease;
+      display: inline-block;
+    }
+    .nav-link:hover {
+      background: rgba(255,255,255,0.2);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    .nav-btn-dark {
+      background: #1C1917;
+      color: white;
+      border: none;
+      padding: 9px 20px;
+      border-radius: 25px;
+      cursor: pointer;
+      font-size: 15px;
+      font-weight: 600;
+      transition: all 0.2s ease;
+      font-family: inherit;
+    }
+    .nav-btn-dark:hover {
+      background: #292524;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+    .nav-btn-white {
+      background: white;
+      color: #F97316;
+      border: none;
+      padding: 9px 20px;
+      border-radius: 25px;
+      cursor: pointer;
+      font-size: 15px;
+      font-weight: 700;
+      transition: all 0.2s ease;
+      text-decoration: none;
+      display: inline-block;
+    }
+    .nav-btn-white:hover {
+      background: #FFF7ED;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+    .burger {
+      display: none;
+      flex-direction: column;
+      gap: 5px;
+      cursor: pointer;
+      background: none;
+      border: none;
+      padding: 8px;
+    }
+    .burger span {
+      display: block;
+      width: 26px;
+      height: 3px;
+      background: white;
+      border-radius: 3px;
+      transition: all 0.3s;
+    }
+    .nav-menu {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .mobile-menu {
+      display: none;
+    }
+    @media (max-width: 768px) {
+      .burger { display: flex !important; }
+      .nav-menu { display: none !important; }
+      .mobile-menu {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding: 16px 20px;
+        background: #EA580C;
+        position: absolute;
+        top: 70px;
+        left: 0;
+        right: 0;
+        z-index: 999;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+      }
+      .mobile-menu.closed { display: none; }
+      .mobile-link {
+        color: white;
+        text-decoration: none;
+        font-size: 16px;
+        font-weight: 600;
+        padding: 12px 16px;
+        border-radius: 8px;
+        transition: background 0.2s;
+      }
+      .mobile-link:hover { background: rgba(255,255,255,0.15); }
+    }
+  `;
+
   return (
-    <nav style={{ backgroundColor: '#F97316', padding: '0 20px', position: 'sticky', top: 0, zIndex: 1000, boxShadow: '0 2px 8px rgba(0,0,0,0.2)' }}>
-      <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '60px' }}>
+    <>
+      <style>{navStyle}</style>
+      <nav style={{ backgroundColor: '#F97316', position: 'sticky', top: 0, zIndex: 1000, boxShadow: '0 3px 12px rgba(0,0,0,0.25)' }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '70px' }}>
 
-        {/* Logo */}
-        <Link to="/" style={{ color: 'white', textDecoration: 'none', fontSize: '20px', fontWeight: 'bold', letterSpacing: '1px' }}>
-          🛒 Mini Marketplace
-        </Link>
+          {/* Logo */}
+          <Link to="/" style={{ color: 'white', textDecoration: 'none', fontSize: '22px', fontWeight: '900', letterSpacing: '-0.5px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            🛒 <span>Mini Marketplace</span>
+          </Link>
 
-        {/* Menu */}
-        <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
-          <Link to="/" style={{ color: 'white', textDecoration: 'none', fontSize: '14px', fontWeight: '500' }}>Accueil</Link>
+          {/* Menu Desktop */}
+          <div className="nav-menu">
+            <Link to="/" className="nav-link">Accueil</Link>
+            {token ? (
+              <>
+                {role === 'vendeur' && (
+                  <Link to="/nouvelle-annonce" className="nav-link">📢 Publier</Link>
+                )}
+                <Link to="/mon-compte" className="nav-link">👤 {username}</Link>
+                <Link to="/messages" className="nav-link">💬 Messages</Link>
+                <button onClick={handleLogout} className="nav-btn-dark">Déconnexion</button>
+              </>
+            ) : (
+              <>
+                <Link to="/login" className="nav-link">Connexion</Link>
+                <Link to="/register" className="nav-btn-white">S'inscrire</Link>
+              </>
+            )}
+          </div>
+
+          {/* Burger Mobile */}
+          <button className="burger" onClick={() => setMenuOpen(!menuOpen)}>
+            <span style={{ transform: menuOpen ? 'rotate(45deg) translate(6px, 6px)' : 'none' }} />
+            <span style={{ opacity: menuOpen ? 0 : 1 }} />
+            <span style={{ transform: menuOpen ? 'rotate(-45deg) translate(6px, -6px)' : 'none' }} />
+          </button>
+        </div>
+
+        {/* Menu Mobile */}
+        <div className={`mobile-menu ${menuOpen ? '' : 'closed'}`}>
+          <Link to="/" className="mobile-link" onClick={() => setMenuOpen(false)}>🏠 Accueil</Link>
           {token ? (
             <>
               {role === 'vendeur' && (
-                <Link to="/nouvelle-annonce" style={{ color: 'white', textDecoration: 'none', fontSize: '14px', fontWeight: '500' }}>Publier</Link>
+                <Link to="/nouvelle-annonce" className="mobile-link" onClick={() => setMenuOpen(false)}>📢 Publier une annonce</Link>
               )}
-              <Link to="/mon-compte" style={{ color: 'white', textDecoration: 'none', fontSize: '14px', fontWeight: '500' }}>
-                👤 {username}
-              </Link>
-              <Link to="/messages" style={{ color: 'white', textDecoration: 'none', fontSize: '14px', fontWeight: '500' }}>Messages</Link>
-              <button onClick={handleLogout} style={{ backgroundColor: '#1C1917', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '20px', cursor: 'pointer', fontSize: '14px' }}>
-                Déconnexion
-              </button>
+              <Link to="/mon-compte" className="mobile-link" onClick={() => setMenuOpen(false)}>👤 {username}</Link>
+              <Link to="/messages" className="mobile-link" onClick={() => setMenuOpen(false)}>💬 Messages</Link>
+              <button onClick={handleLogout} className="nav-btn-dark" style={{ textAlign: 'left', borderRadius: '8px', width: '100%' }}>🚪 Déconnexion</button>
             </>
           ) : (
             <>
-              <Link to="/login" style={{ color: 'white', textDecoration: 'none', fontSize: '14px', fontWeight: '500' }}>Connexion</Link>
-              <Link to="/register" style={{ backgroundColor: '#1C1917', color: 'white', textDecoration: 'none', padding: '8px 16px', borderRadius: '20px', fontSize: '14px', fontWeight: '500' }}>
-                Inscription
-              </Link>
+              <Link to="/login" className="mobile-link" onClick={() => setMenuOpen(false)}>🔐 Connexion</Link>
+              <Link to="/register" className="mobile-link" onClick={() => setMenuOpen(false)}>📝 S'inscrire</Link>
             </>
           )}
         </div>
-      </div>
-    </nav>
+      </nav>
+    </>
   );
 }
 
