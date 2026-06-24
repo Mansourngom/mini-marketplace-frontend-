@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+const API_URL = process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000';
+
+
 function NouvelleAnnonce() {
   const [formData, setFormData] = useState({
     titre: '',
@@ -215,7 +218,7 @@ function NouvelleAnnonce() {
       data.append('localisation', formData.localisation);
       if (image) data.append('image', image);
 
-      const response = await fetch('http://127.0.0.1:8000/api/annonces/creer/', {
+      const response = await fetch(`${API_URL}/api/annonces/creer/`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` },
         body: data

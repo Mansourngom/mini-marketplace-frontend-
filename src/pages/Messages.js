@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+const API_URL = process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000';
+
 function Messages() {
   const [messages, setMessages] = useState([]);
   const [reponses, setReponses] = useState({});
@@ -16,7 +18,7 @@ function Messages() {
     const token = localStorage.getItem('access_token');
     if (!token) { navigate('/login'); return; }
     try {
-      const response = await fetch('http://127.0.0.1:8000/api/messages/recus/', {
+      const response = await fetch(`${API_URL}/api/messages/recus/`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await response.json();
@@ -33,7 +35,7 @@ function Messages() {
     const contenu = reponses[msg.id];
     if (!contenu) return;
     try {
-      const response = await fetch('http://127.0.0.1:8000/api/messages/envoyer/', {
+      const response = await fetch(`${API_URL}/api/messages/envoyer/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ destinataire: msg.expediteur, annonce: msg.annonce, contenu })

@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+const API_URL = process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000';
+
 function MonCompte() {
   const [annonces, setAnnonces] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -15,7 +17,7 @@ function MonCompte() {
     const token = localStorage.getItem('access_token');
     if (!token) { navigate('/login'); return; }
     try {
-      const response = await fetch('http://127.0.0.1:8000/api/annonces/mes-annonces/', {
+      const response = await fetch(`${API_URL}/api/annonces/mes-annonces/`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await response.json();
@@ -31,7 +33,7 @@ function MonCompte() {
     const token = localStorage.getItem('access_token');
     if (window.confirm('Voulez-vous vraiment supprimer cette annonce ?')) {
       try {
-        await fetch(`http://127.0.0.1:8000/api/annonces/${id}/`, {
+        await fetch(`${API_URL}/api/annonces/${id}/`, {
           method: 'DELETE',
           headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -43,7 +45,7 @@ function MonCompte() {
   const getImageUrl = (image) => {
     if (!image) return null;
     const clean = image.trim();
-    return clean.startsWith('http') ? clean : `http://127.0.0.1:8000${clean}`;
+    return clean.startsWith('http') ? clean : `${API_URL}${clean}`;
   };
 
   const handleLogout = () => {

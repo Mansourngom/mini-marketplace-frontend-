@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Accueil from './pages/Accueil';
@@ -14,6 +14,9 @@ function Navbar() {
   const token = localStorage.getItem('access_token');
   const role = localStorage.getItem('user_role');
   const username = localStorage.getItem('username');
+  const location = useLocation();
+
+  const isAuthPage = location.pathname === '/login' || location.pathname === '/register';
 
   const handleLogout = () => {
     localStorage.removeItem('access_token');
@@ -96,9 +99,7 @@ function Navbar() {
       gap: 8px;
       align-items: center;
     }
-    .mobile-menu {
-      display: none;
-    }
+    .mobile-menu { display: none; }
     @media (max-width: 768px) {
       .burger { display: flex !important; }
       .nav-menu { display: none !important; }
@@ -142,9 +143,10 @@ function Navbar() {
 
           {/* Menu Desktop */}
           <div className="nav-menu">
-            <Link to="/" className="nav-link">Accueil</Link>
             {token ? (
               <>
+                {/* Accueil visible seulement quand connecté */}
+                <Link to="/" className="nav-link">Accueil</Link>
                 {role === 'vendeur' && (
                   <Link to="/nouvelle-annonce" className="nav-link">📢 Publier</Link>
                 )}
@@ -154,6 +156,10 @@ function Navbar() {
               </>
             ) : (
               <>
+                {/* Connexion et S'inscrire toujours visibles quand non connecté */}
+                {!isAuthPage && (
+                  <Link to="/" className="nav-link">Accueil</Link>
+                )}
                 <Link to="/login" className="nav-link">Connexion</Link>
                 <Link to="/register" className="nav-btn-white">S'inscrire</Link>
               </>
@@ -170,9 +176,9 @@ function Navbar() {
 
         {/* Menu Mobile */}
         <div className={`mobile-menu ${menuOpen ? '' : 'closed'}`}>
-          <Link to="/" className="mobile-link" onClick={() => setMenuOpen(false)}>🏠 Accueil</Link>
           {token ? (
             <>
+              <Link to="/" className="mobile-link" onClick={() => setMenuOpen(false)}>🏠 Accueil</Link>
               {role === 'vendeur' && (
                 <Link to="/nouvelle-annonce" className="mobile-link" onClick={() => setMenuOpen(false)}>📢 Publier une annonce</Link>
               )}
@@ -182,6 +188,9 @@ function Navbar() {
             </>
           ) : (
             <>
+              {!isAuthPage && (
+                <Link to="/" className="mobile-link" onClick={() => setMenuOpen(false)}></Link>
+              )}
               <Link to="/login" className="mobile-link" onClick={() => setMenuOpen(false)}>🔐 Connexion</Link>
               <Link to="/register" className="mobile-link" onClick={() => setMenuOpen(false)}>📝 S'inscrire</Link>
             </>
@@ -192,11 +201,11 @@ function Navbar() {
   );
 }
 
-function App() {
+function AppContent() {
   const token = localStorage.getItem('access_token');
 
   return (
-    <Router>
+    <>
       <Navbar />
       <Routes>
         <Route path="/" element={token ? <Accueil /> : <Login />} />
@@ -208,6 +217,14 @@ function App() {
         <Route path="/messages" element={<Messages />} />
         <Route path="/modifier-annonce/:id" element={<ModifierAnnonce />} />
       </Routes>
+    </>
+  );
+}
+
+function App() {
+  return (
+    <Router>
+      <AppContent />
     </Router>
   );
 }
