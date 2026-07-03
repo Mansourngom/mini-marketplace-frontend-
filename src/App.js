@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -9,14 +9,39 @@ import NouvelleAnnonce from './pages/NouvelleAnnonce';
 import Messages from './pages/Messages';
 import ModifierAnnonce from './pages/ModifierAnnonce';
 
+const API_URL = process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000';
+
 function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [nbMessages, setNbMessages] = useState(0);
   const token = localStorage.getItem('access_token');
   const role = localStorage.getItem('user_role');
   const username = localStorage.getItem('username');
   const location = useLocation();
 
   const isAuthPage = location.pathname === '/login' || location.pathname === '/register';
+
+  // Vérifie les messages toutes les 30 secondes
+  useEffect(() => {
+    if (!token) return;
+    const fetchMessages = async () => {
+      try {
+        const res = await fetch(`${API_URL}/api/messages/recus/`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        setNbMessages(Array.isArray(data) ? data.length : 0);
+      } catch (e) {}
+    };
+    fetchMessages();
+    const interval = setInterval(fetchMessages, 30000);
+    return () => clearInterval(interval);
+  }, [token]);
+
+  // Remet à 0 quand on est sur la page messages
+  useEffect(() => {
+    if (location.pathname === '/messages') setNbMessages(0);
+  }, [location.pathname]);
 
   const handleLogout = () => {
     localStorage.removeItem('access_token');
@@ -27,6 +52,11 @@ function Navbar() {
   };
 
   const navStyle = `
+    @keyframes pulse-badge {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.2); }
+    }
+
     .nav-link {
       color: white;
       text-decoration: none;
@@ -77,6 +107,30 @@ function Navbar() {
       transform: translateY(-2px);
       box-shadow: 0 4px 12px rgba(0,0,0,0.2);
     }
+    .nav-msg-wrap {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+    }
+    .nav-badge {
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      background: #3B82F6;
+      color: white;
+      font-size: 10px;
+      font-weight: 800;
+      min-width: 18px;
+      height: 18px;
+      border-radius: 99px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 4px;
+      border: 2px solid #F97316;
+      animation: pulse-badge 1.5s ease-in-out infinite;
+      z-index: 10;
+    }
     .burger {
       display: none;
       flex-direction: column;
@@ -100,6 +154,21 @@ function Navbar() {
       align-items: center;
     }
     .mobile-menu { display: none; }
+    .mobile-badge {
+      background: #3B82F6;
+      color: white;
+      font-size: 10px;
+      font-weight: 800;
+      min-width: 18px;
+      height: 18px;
+      border-radius: 99px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 5px;
+      margin-left: 8px;
+      vertical-align: middle;
+    }
     @media (max-width: 768px) {
       .burger { display: flex !important; }
       .nav-menu { display: none !important; }
@@ -125,6 +194,8 @@ function Navbar() {
         padding: 12px 16px;
         border-radius: 8px;
         transition: background 0.2s;
+        display: flex;
+        align-items: center;
       }
       .mobile-link:hover { background: rgba(255,255,255,0.15); }
     }
@@ -145,18 +216,28 @@ function Navbar() {
           <div className="nav-menu">
             {token ? (
               <>
-                {/* Accueil visible seulement quand connecté */}
                 <Link to="/" className="nav-link">Accueil</Link>
                 {role === 'vendeur' && (
                   <Link to="/nouvelle-annonce" className="nav-link">📢 Publier</Link>
                 )}
                 <Link to="/mon-compte" className="nav-link">👤 {username}</Link>
-                <Link to="/messages" className="nav-link">💬 Messages</Link>
+
+                {/* Bouton Messages avec badge */}
+                <div className="nav-msg-wrap">
+                  <Link to="/messages" className="nav-link">
+                    💬 Messages
+                  </Link>
+                  {nbMessages > 0 && (
+                    <span className="nav-badge">
+                      {nbMessages > 99 ? '99+' : nbMessages}
+                    </span>
+                  )}
+                </div>
+
                 <button onClick={handleLogout} className="nav-btn-dark">Déconnexion</button>
               </>
             ) : (
               <>
-                {/* Connexion et S'inscrire toujours visibles quand non connecté */}
                 {!isAuthPage && (
                   <Link to="/" className="nav-link">Accueil</Link>
                 )}
@@ -183,13 +264,18 @@ function Navbar() {
                 <Link to="/nouvelle-annonce" className="mobile-link" onClick={() => setMenuOpen(false)}>📢 Publier une annonce</Link>
               )}
               <Link to="/mon-compte" className="mobile-link" onClick={() => setMenuOpen(false)}>👤 {username}</Link>
-              <Link to="/messages" className="mobile-link" onClick={() => setMenuOpen(false)}>💬 Messages</Link>
+              <Link to="/messages" className="mobile-link" onClick={() => setMenuOpen(false)}>
+                💬 Messages
+                {nbMessages > 0 && (
+                  <span className="mobile-badge">{nbMessages > 99 ? '99+' : nbMessages}</span>
+                )}
+              </Link>
               <button onClick={handleLogout} className="nav-btn-dark" style={{ textAlign: 'left', borderRadius: '8px', width: '100%' }}>🚪 Déconnexion</button>
             </>
           ) : (
             <>
               {!isAuthPage && (
-                <Link to="/" className="mobile-link" onClick={() => setMenuOpen(false)}></Link>
+                <Link to="/" className="mobile-link" onClick={() => setMenuOpen(false)}>🏠 Accueil</Link>
               )}
               <Link to="/login" className="mobile-link" onClick={() => setMenuOpen(false)}>🔐 Connexion</Link>
               <Link to="/register" className="mobile-link" onClick={() => setMenuOpen(false)}>📝 S'inscrire</Link>
